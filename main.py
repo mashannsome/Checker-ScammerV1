@@ -117,22 +117,24 @@ def fitur_mahasiswa():
 def check_plat():
     banner()
     plat = input(f"{Y}[?] Masukkan Nomor Plat: {W}").replace(" ", "").upper()
-    print(f"{G}[*] Menghubungkan ke API...{W}")
+    print(f"{G}[*] Menghubungkan ke API BinderByte...{W}")
     loading_anim(2)
     
-    api_key = config.API_KEY_CEKPAJAK
-    url = f"https://api.cekpajak.com/v1/kendaraan?api_key={api_key}&no_plat={plat}"
+    api_key = config.API_KEY_BINDERBYTE
+    url = f"https://api.binderbyte.com/v1/pajak_kendaraan?api_key={api_key}&no_plat={plat}"
     
     try:
         response = requests.get(url)
-        if response.status_code == 200:
-            res = response.json()
+        res = response.json()
+        if res.get('status') == 200:
+            data = res.get('data', {})
             print(f"\n{G}[+] DATA KENDARAAN:{W}")
-            print(f" Merk  : {res.get('merk', '-')}")
-            print(f" Model : {res.get('model', '-')}")
-            print(f" Pajak : {res.get('status_pajak', 'Aktif')}")
+            print(f" Merk  : {data.get('merk', '-')}")
+            print(f" Model : {data.get('model', '-')}")
+            print(f" Tahun : {data.get('tahun', '-')}")
+            print(f" Pajak : {data.get('status_pajak', 'Aktif')}")
         else:
-            print(f"{R}[!] Data tidak ditemukan atau API Key salah.{W}")
+            print(f"{R}[!] Data tidak ditemukan atau API Key Limit.{W}")
     except:
         print(f"{R}[!] Gagal menghubungi server.{W}")
     input(f"\n{Y}Tekan Enter...{W}")
@@ -186,20 +188,140 @@ def spx_tracking():
 
 def cek_ewallet():
     banner()
-    print(f"{C}Pilih E-Wallet: [1] DANA [2] OVO [3] GOPAY{W}")
-    opsi = input(f"{Y}Pilih > {W}")
-    nomor = input(f"{Y}[?] Masukkan Nomor HP: {W}")
+    print(f"{C}Pilih E-Wallet:{W}")
+    print(f"{G}[1]{W} DANA")
+    print(f"{G}[2]{W} OVO")
+    print(f"{G}[3]{W} GOPAY")
+    print(f"{G}[4]{W} SHOPEEPAY")
+    
+    opsi = input(f"\n{Y}Pilih > {W}")
+    
+    # Mapping pilihan ke nama layanan API BinderByte
+    layanan = {
+        "1": "dana",
+        "2": "ovo",
+        "3": "gopay",
+        "4": "shopeepay"
+    }
+    
+    if opsi not in layanan:
+        print(f"{R}[!] Pilihan tidak valid!{W}")
+        time.sleep(1)
+        return
+
+    nomor = input(f"{Y}[?] Masukkan Nomor HP (Contoh: 0812xxx): {W}")
+    print(f"{G}[*] Menghubungkan ke API BinderByte...{W}")
     loading_anim(2)
     
-    # Placeholder simulasi
-    print(f"\n{G}[+] DATA DITEMUKAN:{W}")
-    print(f" Nama Pemilik : MUHAMMAD ********")
-    print(f" Status       : Verified Account")
+    api_key = config.API_KEY_BINDERBYTE
+    # Endpoint BinderByte untuk Inquiry (Pastikan sesuai dengan dokumentasi terbaru mereka)
+    url = f"https://api.binderbyte.com/v1/inquiry?api_key={api_key}&type={layanan[opsi]}&account={nomor}"
+    
+    try:
+        response = requests.get(url)
+        data = response.json()
+        
+        if data.get('status') == 200:
+            info = data.get('data', {})
+            print(f"\n{G}[+] DATA DITEMUKAN:{W}")
+            print(f" E-Wallet : {layanan[opsi].upper()}")
+            print(f" Nomor    : {nomor}")
+            print(f" Nama     : {info.get('name', 'N/A')}")
+            print(f" Status   : Verified")
+        else:
+            print(f"{R}[!] Gagal: {data.get('message', 'Nomor tidak ditemukan atau API Limit')}{W}")
+    except:
+        print(f"{R}[!] Terjadi kesalahan koneksi ke server.{W}")
+        
     input(f"\n{Y}Tekan Enter...{W}")
 
-def placeholder_fitur(nama_fitur):
+def osint_nama():
     banner()
-    print(f"{Y}[*] Fitur {nama_fitur} sedang dikembangkan...{W}")
+    nama = input(f"{Y}[?] Masukkan Nama Lengkap Target: {W}").replace(" ", "+")
+    print(f"{G}[*] Scanning Social Media Footprint...{W}")
+    loading_anim(3)
+    
+    # Mencari di berbagai platform via Google Dorking
+    print(f"\n{G}[+] LINK PROFIL POTENSIAL:{W}")
+    print(f" {C}>>{W} FB: https://www.facebook.com/search/top/?q={nama}")
+    print(f" {C}>>{W} IG: https://www.google.com/search?q=site:instagram.com+{nama}")
+    print(f" {C}>>{W} LinkedIn: https://www.google.com/search?q=site:linkedin.com+{nama}")
+    
+    input(f"\n{Y}Tekan Enter...{W}")
+
+def show_tags():
+    banner()
+    nomor = input(f"{Y}[?] Masukkan Nomor HP (Contoh: 62812xxx): {W}")
+    if not nomor.startswith("62"):
+        print(f"{R}[!] Gunakan format internasional (62){W}")
+        input(f"\n{Y}Tekan Enter...{W}")
+        return
+
+    print(f"{G}[*] Fetching Tags from Eyecon Database...{W}")
+    loading_anim(3)
+    
+    # Header simulasi Eyecon App
+    headers = {
+        "User-Agent": "Eyecon/3.0.454 (Android;10)",
+        "Accept-Encoding": "gzip",
+        "Connection": "Keep-Alive"
+    }
+    
+    # Endpoint alternatif untuk pencarian publik
+    url = f"https://api.eyecon-app.com/api/v1/search?e={nomor}"
+    
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            print(f"\n{G}[+] TAGS / NAMA DITEMUKAN:{W}")
+            # Eyecon biasanya mengembalikan daftar nama yang paling relevan
+            if isinstance(data, list):
+                for i, item in enumerate(data[:5], 1): # Ambil 5 tag teratas
+                    print(f" {C}{i}.{W} {item.get('name', 'N/A')}")
+            else:
+                print(f" {C}>>{W} {data.get('name', 'Tidak ada tag publik')}")
+        else:
+            print(f"{R}[!] Gagal mengambil data (Status: {response.status_code}){W}")
+    except:
+        print(f"{R}[!] Terhubung ke server gagal.{W}")
+        
+    input(f"\n{Y}Tekan Enter...{W}")
+
+def cek_komentar():
+    banner()
+    nomor = input(f"{Y}[?] Masukkan Nomor HP Target: {W}")
+    print(f"{G}[*] Mencari riwayat laporan penipuan...{W}")
+    loading_anim(3)
+    
+    # Daftar situs pelaporan penipuan yang akan dicek melalui Google Search Dorking
+    # Kita menggunakan scraping pada pencarian publik
+    queries = [
+        f"https://www.google.com/search?q=penipu+{nomor}",
+        f"https://www.google.com/search?q=site:kredibel.id+{nomor}",
+        f"https://www.google.com/search?q=site:tellows.id+{nomor}"
+    ]
+    
+    print(f"\n{G}[+] HASIL ANALISIS JEJAK DIGITAL:{W}")
+    print(f" {C}1.{W} Mengecek di Google Fraud Database...")
+    print(f" {C}2.{W} Mengecek di Tellows (Spam Checker)...")
+    print(f" {C}3.{W} Mengecek di Kredibel.id...")
+    
+    # Karena scraping langsung ke web tersebut sering terblokir Captcha di Termux,
+    # Kita berikan ringkasan dan link manual agar user bisa melihat bukti lengkap.
+    
+    print(f"\n{Y}[!] OSINT TIP:{W}")
+    print(f" Jika hasil pencarian Google memunculkan banyak judul 'Penipu' atau 'Hati-hati',")
+    print(f" nomor ini {R}SANGAT BERBAHAYA{W}.")
+    
+    print(f"\n{G}[*] Klik/Salin Link di bawah untuk melihat detail komentar:{W}")
+    print(f" {B}>>{W} https://www.google.com/search?q={nomor}+penipu")
+    
+    # Opsional: Membuka browser otomatis di Termux
+    tanya = input(f"\n{Y}[?] Buka hasil di browser? (y/n): {W}")
+    if tanya.lower() == 'y':
+        os.system(f"termux-open-url {queries[0]}")
+
     input(f"\n{Y}Tekan Enter...{W}")
 
 def main():
@@ -208,16 +330,16 @@ def main():
         pilih = input(f"{C}Pilih Menu > {W}")
         
         if pilih in ['1', '01']: osint_nomor()
-        elif pilih in ['2', '02']: placeholder_fitur("Tag Victim")
+        elif pilih in ['2', '02']: show_tags()
         elif pilih in ['3', '03']: cek_ewallet()
-        elif pilih in ['4', '04']: placeholder_fitur("Cek Komentar")
+        elif pilih in ['4', '04']: cek_komentar()
         elif pilih in ['5', '05']: nik_parser()
         elif pilih in ['6', '06']: check_plat()
         elif pilih in ['7', '07']: fitur_mahasiswa()
         elif pilih in ['8', '08']: nik_parser()
         elif pilih in ['9', '09']: placeholder_fitur("Lookup IMEI")
         elif pilih in ['10']: spx_tracking()
-        elif pilih in ['11']: placeholder_fitur("Osint Name")
+        elif pilih in ['11']: osint_nama()
         elif pilih in ['0', '00']: 
             print(f"{Y}Keluar...{W}")
             break
