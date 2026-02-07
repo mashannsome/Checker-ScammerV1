@@ -207,7 +207,7 @@ def main():
         menu()
         pilih = input(f"{C}Pilih Menu > {W}")
         
-        if pilih in ['1', '01']: osint_nomor("Osint Nomor HP")
+        if pilih in ['1', '01']: osint_nomor()
         elif pilih in ['2', '02']: placeholder_fitur("Tag Victim")
         elif pilih in ['3', '03']: cek_ewallet()
         elif pilih in ['4', '04']: placeholder_fitur("Cek Komentar")
