@@ -2,6 +2,7 @@ import os
 import sys
 import requests
 import time
+import config
 from colorama import Fore, Style
 
 # Warna untuk tampilan Termux
