@@ -23,7 +23,7 @@ def banner():
  ██║   ██║╚════██║██║██║╚██╗██║   ██║   
  ╚██████╔╝███████║██║██║ ╚████║   ██║   
   ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═══╝   ╚═╝   
-    {Y}Checker-Scammer & All-in-One OSINT{W}
+    {Y}Checker-Scammer & All-in-One OSINT by Mashannsome {W}
     """)
 
 def loading_anim(seconds):
