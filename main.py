@@ -14,6 +14,7 @@ B = Fore.BLUE
 W = Style.RESET_ALL
 
 def banner():
+    # Membersihkan layar sesuai OS
     os.system('clear' if os.name == 'posix' else 'cls')
     print(f"""{C}
   ██████╗ ███████╗██╗███╗   ██╗████████╗
@@ -24,6 +25,17 @@ def banner():
   ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═══╝   ╚═╝   
     {Y}Checker-Scammer & All-in-One OSINT{W}
     """)
+
+def loading_anim(seconds):
+    # Animasi loading sederhana
+    animation = ["|", "/", "-", "\\"]
+    end_time = time.time() + seconds
+    while time.time() < end_time:
+        for char in animation:
+            sys.stdout.write(f'\r{G}[*] Processing {char}{W}')
+            sys.stdout.flush()
+            time.sleep(0.1)
+    sys.stdout.write('\r' + ' ' * 20 + '\r')
 
 def menu():
     banner()
@@ -46,21 +58,26 @@ def menu():
 def fitur_mahasiswa():
     banner()
     query = input(f"{Y}[?] Masukkan Nama/NIM: {W}")
-    print(f"{G}[*] Searching PDDIKTI Database...{W}")
+    loading_anim(1)
     try:
         url = f"https://api-frontend.kemdikbud.go.id/hit_mhs/{query}"
         res = requests.get(url).json()
-        for m in res.get('mahasiswa', []):
-            print(f" {C}>>{W} {m['text']}")
-    except: print(f"{R}[!] Gagal mengambil data.{W}")
+        if "mahasiswa" in res:
+            print(f"\n{G}[+] Hasil Ditemukan:{W}")
+            for m in res.get('mahasiswa', []):
+                print(f" {C}>>{W} {m['text']}")
+        else:
+            print(f"{R}[!] Data tidak ditemukan.{W}")
+    except:
+        print(f"{R}[!] Gagal mengambil data.{W}")
     input(f"\n{Y}Tekan Enter...{W}")
 
 def check_plat():
     banner()
-    plat = input(f"{Y}[?] Masukkan Nomor Plat: {W}").upper()
-    print(f"{G}[*] Menghubungkan ke API CekPajak...{W}")
+    plat = input(f"{Y}[?] Masukkan Nomor Plat: {W}").replace(" ", "").upper()
+    print(f"{G}[*] Menghubungkan ke API...{W}")
+    loading_anim(2)
     
-    # Menarik API Key dari config.py
     api_key = config.API_KEY_CEKPAJAK
     url = f"https://api.cekpajak.com/v1/kendaraan?api_key={api_key}&no_plat={plat}"
     
@@ -68,58 +85,61 @@ def check_plat():
         response = requests.get(url)
         if response.status_code == 200:
             res = response.json()
-            # Sesuaikan dengan format JSON dari penyedia API kamu
             print(f"\n{G}[+] DATA KENDARAAN:{W}")
             print(f" Merk  : {res.get('merk', '-')}")
             print(f" Model : {res.get('model', '-')}")
             print(f" Pajak : {res.get('status_pajak', 'Aktif')}")
         else:
-            print(f"{R}[!] Data tidak ditemukan.{W}")
+            print(f"{R}[!] Data tidak ditemukan atau API Key salah.{W}")
     except:
-        print(f"{R}[!] Gagal mengambil data.{W}")
+        print(f"{R}[!] Gagal menghubungi server.{W}")
     input(f"\n{Y}Tekan Enter...{W}")
 
 def nik_parser():
     banner()
-    nik = input(f"{Y}[?] Masukkan NIK: {W}")
+    nik = input(f"{Y}[?] Masukkan NIK (16 digit): {W}")
     if len(nik) != 16:
         print(f"{R}[!] NIK harus 16 digit!{W}")
-        return
-
-    prov = nik[:2]
-    tgl = nik[6:12]
-    
-    print(f"\n{G}[+] HASIL ANALISIS NIK (OSINT):{W}")
-    print(f" Kode Provinsi : {prov}")
-    print(f" Kode Wilayah  : {nik[2:4]}.{nik[4:6]}")
-    print(f" Tgl Lahir/Kode: {tgl}")
-    print(f"{Y}[i] Gunakan database BPS untuk mencocokkan kode wilayah.{W}")
+    else:
+        loading_anim(1)
+        prov = nik[:2]
+        kab = nik[2:4]
+        tgl = int(nik[6:8])
+        gender = "Laki-laki"
+        if tgl > 40:
+            gender = "Perempuan"
+            tgl -= 40
+        
+        print(f"\n{G}[+] HASIL ANALISIS NIK:{W}")
+        print(f" Jenis Kelamin : {gender}")
+        print(f" Kode Provinsi : {prov}")
+        print(f" Kode Kab/Kota : {kab}")
+        print(f" Tanggal Lahir : {tgl}-{nik[8:10]}-19{nik[10:12]}")
+        print(f"{Y}[i] Gunakan database BPS untuk detail wilayah.{W}")
     input(f"\n{Y}Tekan Enter...{W}")
 
 def spx_tracking():
     banner()
     resi = input(f"{Y}[?] Masukkan No Resi SPX: {W}")
-    print(f"{G}[*] Menghubungkan ke API BinderByte...{W}")
+    loading_anim(2)
     
-    # Menarik API Key dari config.py
     api_key = config.API_KEY_BINDERBYTE
     url = f"https://api.binderbyte.com/v1/track?api_key={api_key}&courier=spx&awb={resi}"
     
     try:
         response = requests.get(url)
         data = response.json()
-        
-        if data['status'] == 200:
+        if data.get('status') == 200:
             info = data['data']['summary']
-            status = data['data']['history'][0] # Ambil status terbaru
+            history = data['data']['history'][0]
             print(f"\n{G}[+] DATA DITEMUKAN:{W}")
             print(f" Kurir  : {info['courier']}")
             print(f" Status : {info['status']}")
-            print(f" Detail : {status['description']}")
+            print(f" Update : {history['description']}")
         else:
-            print(f"{R}[!] Resi tidak valid atau API Limit.{W}")
+            print(f"{R}[!] Resi tidak ditemukan atau API Limit.{W}")
     except:
-        print(f"{R}[!] Terjadi kesalahan pada server API.{W}")
+        print(f"{R}[!] Terjadi kesalahan pada server.{W}")
     input(f"\n{Y}Tekan Enter...{W}")
 
 def cek_ewallet():
@@ -127,11 +147,9 @@ def cek_ewallet():
     print(f"{C}Pilih E-Wallet: [1] DANA [2] OVO [3] GOPAY{W}")
     opsi = input(f"{Y}Pilih > {W}")
     nomor = input(f"{Y}[?] Masukkan Nomor HP: {W}")
-    print(f"{G}[*] Mengecek Inquiry Name...{W}")
+    loading_anim(2)
     
-    # Logika dasar: Menggunakan API Payment Gateway seperti Flip/Oy (butuh integrasi)
-    # Ini simulasi tampilan hasil yang didapat
-    time.sleep(2)
+    # Placeholder simulasi
     print(f"\n{G}[+] DATA DITEMUKAN:{W}")
     print(f" Nama Pemilik : MUHAMMAD ********")
     print(f" Status       : Verified Account")
@@ -139,10 +157,7 @@ def cek_ewallet():
 
 def placeholder_fitur(nama_fitur):
     banner()
-    print(f"{Y}[*] Fitur {nama_fitur} sedang diinisialisasi...{W}")
-    target = input(f"{C}[?] Masukkan Target: {W}")
-    print(f"{R}[!] Error: API Key atau Module {nama_fitur} belum terhubung.{W}")
-    print(f"{G}[i] Hubungkan API OSINT kamu di file config.py{W}")
+    print(f"{Y}[*] Fitur {nama_fitur} sedang dikembangkan...{W}")
     input(f"\n{Y}Tekan Enter...{W}")
 
 def main():
@@ -152,19 +167,21 @@ def main():
         
         if pilih in ['1', '01']: placeholder_fitur("Osint Nomor HP")
         elif pilih in ['2', '02']: placeholder_fitur("Tag Victim")
-        elif pilih in ['3', '03']: cek_ewallet() # <--- Ubah ini
+        elif pilih in ['3', '03']: cek_ewallet()
         elif pilih in ['4', '04']: placeholder_fitur("Cek Komentar")
-        elif pilih in ['5', '05']: nik_parser()    # <--- Fungsi yang kita buat tadi
-        elif pilih in ['6', '06']: check_plat()   # <--- Fungsi yang kita buat tadi
+        elif pilih in ['5', '05']: nik_parser()
+        elif pilih in ['6', '06']: check_plat()
         elif pilih in ['7', '07']: fitur_mahasiswa()
-        elif pilih in ['8', '08']: nik_parser()    # <--- Bisa pakai parser NIK juga
+        elif pilih in ['8', '08']: nik_parser()
         elif pilih in ['9', '09']: placeholder_fitur("Lookup IMEI")
-        elif pilih in ['10']: spx_tracking()      # <--- Ubah ini
+        elif pilih in ['10']: spx_tracking()
         elif pilih in ['11']: placeholder_fitur("Osint Name")
         elif pilih in ['0', '00']: 
-            print(f"{Y}Program Berhenti.{W}"); break
+            print(f"{Y}Keluar...{W}")
+            break
         else:
-            print(f"{R}Pilihan Salah!{W}"); time.sleep(1)
+            print(f"{R}Pilihan Salah!{W}")
+            time.sleep(1)
 
 if __name__ == "__main__":
     main()
