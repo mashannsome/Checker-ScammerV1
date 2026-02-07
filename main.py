@@ -54,7 +54,49 @@ def menu():
     print(f"{C}" + "="*45 + f"{W}")
 
 # --- Fungsi Integrasi Fitur ---
+def osint_nomor():
+    banner()
+    nomor = input(f"{Y}[?] Masukkan Nomor HP (Gunakan 62...): {W}")
+    if not nomor.startswith("62"):
+        print(f"{R}[!] Gunakan format internasional (Contoh: 62812xxx){W}")
+        input(f"\n{Y}Tekan Enter...{W}")
+        return
 
+    print(f"{G}[*] Searching Truecaller Database...{W}")
+    loading_anim(3)
+    
+    # Header untuk Truecaller (Umumnya butuh Authorization)
+    headers = {
+        "Authorization": f"Bearer {config.TRUECALLER_TOKEN}",
+        "User-Agent": "Truecaller/11.75.5 (Android;10)"
+    }
+    
+    url = f"https://search5-noneu.truecaller.com/v2/search?q={nomor}&countryCode=ID&type=4"
+    
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            if 'data' in data and data['data']:
+                info = data['data'][0]
+                name = info.get('name', 'Tidak Diketahui')
+                provider = info.get('phones', [{}])[0].get('carrier', '-')
+                email = info.get('internetAddresses', [{}])[0].get('id', '-')
+                
+                print(f"\n{G}[+] DATA DITEMUKAN:{W}")
+                print(f" Nama Pemilik : {name}")
+                print(f" Provider     : {provider}")
+                print(f" Email        : {email}")
+                print(f" Score        : {info.get('score', 'N/A')}")
+            else:
+                print(f"{R}[!] Nomor tidak terdaftar di database Truecaller.{W}")
+        else:
+            print(f"{R}[!] Error {response.status_code}: Token Expired atau Salah.{W}")
+    except:
+        print(f"{R}[!] Gagal terhubung ke server Truecaller.{W}")
+    
+    input(f"\n{Y}Tekan Enter...{W}")
+    
 def fitur_mahasiswa():
     banner()
     query = input(f"{Y}[?] Masukkan Nama/NIM: {W}")
@@ -165,7 +207,7 @@ def main():
         menu()
         pilih = input(f"{C}Pilih Menu > {W}")
         
-        if pilih in ['1', '01']: placeholder_fitur("Osint Nomor HP")
+        if pilih in ['1', '01']: osint_nomor("Osint Nomor HP")
         elif pilih in ['2', '02']: placeholder_fitur("Tag Victim")
         elif pilih in ['3', '03']: cek_ewallet()
         elif pilih in ['4', '04']: placeholder_fitur("Cek Komentar")
