@@ -57,26 +57,26 @@ def fitur_mahasiswa():
 
 def check_plat():
     banner()
-    plat = input(f"{Y}[?] Masukkan Nomor Plat (Contoh: B1234ABC): {W}").upper()
-    print(f"{G}[*] Mencari data di Samsat Database...{W}")
+    plat = input(f"{Y}[?] Masukkan Nomor Plat: {W}").upper()
+    print(f"{G}[*] Menghubungkan ke API CekPajak...{W}")
     
-    # Contoh API Pihak Ketiga (Beberapa memerlukan API Key)
-    # Di sini kita menggunakan simulasi request ke endpoint publik
-    url = f"https://api.cekpajak.com/v1/kendaraan/jakarta/{plat}"
+    # Menarik API Key dari config.py
+    api_key = config.API_KEY_CEKPAJAK
+    url = f"https://api.cekpajak.com/v1/kendaraan?api_key={api_key}&no_plat={plat}"
     
     try:
-        # Note: Ini adalah struktur logika, endpoint asli memerlukan autentikasi
         response = requests.get(url)
         if response.status_code == 200:
-            data = response.json()
-            print(f"\n{G}[+] DATA DITEMUKAN:{W}")
-            print(f" Merk/Tipe : {data['merk']}")
-            print(f" Tahun     : {data['tahun']}")
-            print(f" Status    : {data['status_pajak']}")
+            res = response.json()
+            # Sesuaikan dengan format JSON dari penyedia API kamu
+            print(f"\n{G}[+] DATA KENDARAAN:{W}")
+            print(f" Merk  : {res.get('merk', '-')}")
+            print(f" Model : {res.get('model', '-')}")
+            print(f" Pajak : {res.get('status_pajak', 'Aktif')}")
         else:
-            print(f"{R}[!] Data tidak ditemukan atau server sibuk.{W}")
+            print(f"{R}[!] Data tidak ditemukan.{W}")
     except:
-        print(f"{R}[!] Koneksi gagal.{W}")
+        print(f"{R}[!] Gagal mengambil data.{W}")
     input(f"\n{Y}Tekan Enter...{W}")
 
 def nik_parser():
@@ -99,15 +99,27 @@ def nik_parser():
 def spx_tracking():
     banner()
     resi = input(f"{Y}[?] Masukkan No Resi SPX: {W}")
-    print(f"{G}[*] Menghubungkan ke API Shopee Express...{W}")
+    print(f"{G}[*] Menghubungkan ke API BinderByte...{W}")
+    
+    # Menarik API Key dari config.py
+    api_key = config.API_KEY_BINDERBYTE
+    url = f"https://api.binderbyte.com/v1/track?api_key={api_key}&courier=spx&awb={resi}"
+    
     try:
-        # Menggunakan API publik unofficial untuk tracking
-        url = f"https://api.binderbyte.com/v1/track?api_key=GANTI_API_KEY_KAMU&courier=spx&awb={resi}"
-        # Catatan: Untuk real-time, biasanya perlu API Key dari layanan seperti BinderByte (Gratis ada limit)
-        print(f"\n{C}[i] Status terakhir untuk {resi}:{W}")
-        print(f" {G}>>{W} Paket sedang diproses di Sortation Center.")
+        response = requests.get(url)
+        data = response.json()
+        
+        if data['status'] == 200:
+            info = data['data']['summary']
+            status = data['data']['history'][0] # Ambil status terbaru
+            print(f"\n{G}[+] DATA DITEMUKAN:{W}")
+            print(f" Kurir  : {info['courier']}")
+            print(f" Status : {info['status']}")
+            print(f" Detail : {status['description']}")
+        else:
+            print(f"{R}[!] Resi tidak valid atau API Limit.{W}")
     except:
-        print(f"{R}[!] Gagal melacak resi.{W}")
+        print(f"{R}[!] Terjadi kesalahan pada server API.{W}")
     input(f"\n{Y}Tekan Enter...{W}")
 
 def cek_ewallet():
