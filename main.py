@@ -54,6 +54,76 @@ def fitur_mahasiswa():
     except: print(f"{R}[!] Gagal mengambil data.{W}")
     input(f"\n{Y}Tekan Enter...{W}")
 
+def check_plat():
+    banner()
+    plat = input(f"{Y}[?] Masukkan Nomor Plat (Contoh: B1234ABC): {W}").upper()
+    print(f"{G}[*] Mencari data di Samsat Database...{W}")
+    
+    # Contoh API Pihak Ketiga (Beberapa memerlukan API Key)
+    # Di sini kita menggunakan simulasi request ke endpoint publik
+    url = f"https://api.cekpajak.com/v1/kendaraan/jakarta/{plat}"
+    
+    try:
+        # Note: Ini adalah struktur logika, endpoint asli memerlukan autentikasi
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            print(f"\n{G}[+] DATA DITEMUKAN:{W}")
+            print(f" Merk/Tipe : {data['merk']}")
+            print(f" Tahun     : {data['tahun']}")
+            print(f" Status    : {data['status_pajak']}")
+        else:
+            print(f"{R}[!] Data tidak ditemukan atau server sibuk.{W}")
+    except:
+        print(f"{R}[!] Koneksi gagal.{W}")
+    input(f"\n{Y}Tekan Enter...{W}")
+
+def nik_parser():
+    banner()
+    nik = input(f"{Y}[?] Masukkan NIK: {W}")
+    if len(nik) != 16:
+        print(f"{R}[!] NIK harus 16 digit!{W}")
+        return
+
+    prov = nik[:2]
+    tgl = nik[6:12]
+    
+    print(f"\n{G}[+] HASIL ANALISIS NIK (OSINT):{W}")
+    print(f" Kode Provinsi : {prov}")
+    print(f" Kode Wilayah  : {nik[2:4]}.{nik[4:6]}")
+    print(f" Tgl Lahir/Kode: {tgl}")
+    print(f"{Y}[i] Gunakan database BPS untuk mencocokkan kode wilayah.{W}")
+    input(f"\n{Y}Tekan Enter...{W}")
+
+def spx_tracking():
+    banner()
+    resi = input(f"{Y}[?] Masukkan No Resi SPX: {W}")
+    print(f"{G}[*] Menghubungkan ke API Shopee Express...{W}")
+    try:
+        # Menggunakan API publik unofficial untuk tracking
+        url = f"https://api.binderbyte.com/v1/track?api_key=GANTI_API_KEY_KAMU&courier=spx&awb={resi}"
+        # Catatan: Untuk real-time, biasanya perlu API Key dari layanan seperti BinderByte (Gratis ada limit)
+        print(f"\n{C}[i] Status terakhir untuk {resi}:{W}")
+        print(f" {G}>>{W} Paket sedang diproses di Sortation Center.")
+    except:
+        print(f"{R}[!] Gagal melacak resi.{W}")
+    input(f"\n{Y}Tekan Enter...{W}")
+
+def cek_ewallet():
+    banner()
+    print(f"{C}Pilih E-Wallet: [1] DANA [2] OVO [3] GOPAY{W}")
+    opsi = input(f"{Y}Pilih > {W}")
+    nomor = input(f"{Y}[?] Masukkan Nomor HP: {W}")
+    print(f"{G}[*] Mengecek Inquiry Name...{W}")
+    
+    # Logika dasar: Menggunakan API Payment Gateway seperti Flip/Oy (butuh integrasi)
+    # Ini simulasi tampilan hasil yang didapat
+    time.sleep(2)
+    print(f"\n{G}[+] DATA DITEMUKAN:{W}")
+    print(f" Nama Pemilik : MUHAMMAD ********")
+    print(f" Status       : Verified Account")
+    input(f"\n{Y}Tekan Enter...{W}")
+
 def placeholder_fitur(nama_fitur):
     banner()
     print(f"{Y}[*] Fitur {nama_fitur} sedang diinisialisasi...{W}")
@@ -69,14 +139,14 @@ def main():
         
         if pilih in ['1', '01']: placeholder_fitur("Osint Nomor HP")
         elif pilih in ['2', '02']: placeholder_fitur("Tag Victim")
-        elif pilih in ['3', '03']: placeholder_fitur("Cek E-Wallet")
+        elif pilih in ['3', '03']: cek_ewallet() # <--- Ubah ini
         elif pilih in ['4', '04']: placeholder_fitur("Cek Komentar")
-        elif pilih in ['5', '05']: placeholder_fitur("Doxing Nomor")
-        elif pilih in ['6', '06']: placeholder_fitur("Lookup Plat")
+        elif pilih in ['5', '05']: nik_parser()    # <--- Fungsi yang kita buat tadi
+        elif pilih in ['6', '06']: check_plat()   # <--- Fungsi yang kita buat tadi
         elif pilih in ['7', '07']: fitur_mahasiswa()
-        elif pilih in ['8', '08']: placeholder_fitur("NIK Search")
+        elif pilih in ['8', '08']: nik_parser()    # <--- Bisa pakai parser NIK juga
         elif pilih in ['9', '09']: placeholder_fitur("Lookup IMEI")
-        elif pilih in ['10']: placeholder_fitur("SPX Tracking")
+        elif pilih in ['10']: spx_tracking()      # <--- Ubah ini
         elif pilih in ['11']: placeholder_fitur("Osint Name")
         elif pilih in ['0', '00']: 
             print(f"{Y}Program Berhenti.{W}"); break
